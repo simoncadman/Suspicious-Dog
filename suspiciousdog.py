@@ -9,9 +9,11 @@ exit $?
 '''
 
 import socket
+import sys
 import re
 import time
 import sqlite3
+import subprocess
 dbconn = sqlite3.connect('log.db')
 c = dbconn.cursor()
 
@@ -61,6 +63,8 @@ while True:
                 result = c.fetchone()
                 if result == None:
                     print "New mac address seen:", hostname, ipaddr, macaddr
+                    if len(sys.argv) == 2:
+                        subprocess.call([sys.argv[1], 'New mac address detected', " ".join( [ hostname, ipaddr, macaddr ] )])
                     c.execute("INSERT INTO addresses VALUES (?,?,?,?,0)", ( hostname, ipaddr, macaddr, timestamp ))
                     dbconn.commit()
 
