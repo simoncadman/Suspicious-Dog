@@ -11,6 +11,17 @@ exit $?
 import socket
 import re
 import time
+import sqlite3
+dbconn = sqlite3.connect('log.db')
+c = dbconn.cursor()
+
+# create table if not exists
+try:
+    c.execute('''CREATE TABLE addresses
+             (hostname text, ip text, mac text, timestamp date, investigated bool)''')
+    dbconn.commit()
+except sqlite3.OperationalError:
+    pass
 
 arpregex = re.compile("(.*) \(((?:\d{1,3}\.){3}\d{1,3})\) at ((?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}) \[ether\]  on ")
 
@@ -45,4 +56,12 @@ while True:
                 hostname = results.groups(0)[0]
                 ipaddr = results.groups(0)[1]
                 macaddr = results.groups(0)[2]
-                print timestamp, hostname, ipaddr, macaddr
+                
+                c.execute('SELECT * FROM addresses WHERE mac=?', (macaddr,))
+                result = c.fetchone()
+                if result == None:
+                    print "New mac address seen:", hostname, ipaddr, macaddr
+                    c.execute("INSERT INTO addresses VALUES (?,?,?,?,0)", ( hostname, ipaddr, macaddr, timestamp ))
+                    dbconn.commit()
+
+dbconn.close()
