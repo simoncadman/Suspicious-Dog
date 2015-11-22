@@ -70,9 +70,9 @@ while True:
                         pass
                     c.execute("INSERT INTO addresses VALUES (?,?,?,?,0)", ( hostname, ipaddr, macaddr, timestamp ))
                     dbconn.commit()
-               else:
-                   # update last time seen
-                   c.execute("update addresses set timestamp = ? where mac = ?", ( timestamp, macaddr ))
+                else:
+                    # update last time seen
+                    c.execute("update addresses set timestamp = ? where mac = ?", ( timestamp, macaddr ))
                     dbconn.commit()
 
 dbconn.close()

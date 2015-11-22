@@ -1,0 +1,14 @@
+[Unit]
+Description=Suspicious dog
+After=syslog.target network.target ntpd.service netctl-ifplugd@eth0.service
+Requires=ntpd.service
+
+[Service]
+Type=simple
+WorkingDirectory=/Suspicious-Dog/
+ExecStart=/Suspicious-Dog/suspiciousdog.py /usr/local/bin/niftyalert
+RestartSec=1min
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
