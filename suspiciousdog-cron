@@ -1,0 +1,1 @@
+*/6 00 * * * root cd /Suspicious-Dog/ && ./cron.py
