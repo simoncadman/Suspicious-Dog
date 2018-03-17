@@ -1,7 +1,7 @@
 [Unit]
 Description=Suspicious dog
-After=syslog.target network.target ntpd.service netctl-ifplugd@eth0.service
-Requires=ntpd.service
+After=syslog.target network.target openntpd.service netctl-ifplugd@eth0.service
+Requires=openntpd.service
 
 [Service]
 Type=simple
