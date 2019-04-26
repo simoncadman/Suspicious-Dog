@@ -1,12 +1,11 @@
 [Unit]
 Description=Suspicious dog
-After=syslog.target network.target openntpd.service netctl-ifplugd@eth0.service
-Requires=openntpd.service
+After=network.target
 
 [Service]
 Type=simple
 WorkingDirectory=/Suspicious-Dog/
-ExecStart=/Suspicious-Dog/suspiciousdog.py /usr/local/bin/niftyalert
+ExecStart=/Suspicious-Dog/suspiciousdog.py
 RestartSec=1min
 Restart=on-failure
 

@@ -8,14 +8,19 @@ fi
 exit $?
 '''
 
-import socket
 import sys
 import re
 import time
+import json
 import sqlite3
 import subprocess
+import boto3
+SNS_ARN = "arn:aws:sns:us-east-1:294819063748:niftyalert"
+SNS_REGION = 'us-east-1'
+
 dbconn = sqlite3.connect('log.db')
 c = dbconn.cursor()
+client = boto3.client('sns', region_name=SNS_REGION)
 
 # create table if not exists
 try:
@@ -25,54 +30,43 @@ try:
 except sqlite3.OperationalError:
     pass
 
-arpregex = re.compile("(.*) \(((?:\d{1,3}\.){3}\d{1,3})\) at ((?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}) \[ether\]  on ")
+arpregex = re.compile("(.*) \(((?:\d{1,3}\.){3}\d{1,3})\) at ((?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}) \[ether\] on ")
 
-HOST = '0.0.0.0'
-PORT = 60000
-ROUTERIP = "192.168.1.1"
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((HOST, PORT))
-s.listen(1)
 while True:
     # collect data
-    conn, addr = s.accept()
-    arpdata = ""
+    arpdata = subprocess.check_output(['arp', '-a'])
     timestamp = time.time()
-    while 1:
-        data = conn.recv(1024)
-        # only store data if from correct ip
-        if addr[0] == ROUTERIP:
-            arpdata += data
-        if not data: break
-    conn.close()
     
-    # only process data if from correct ip
-    if addr[0] == ROUTERIP:
-        # loop over lines in data
-        for line in arpdata.splitlines():
-            # if line valid arp line
-            results = arpregex.match(line)
-            if results != None:
-                # matches expected format
-                hostname = results.groups(0)[0]
-                ipaddr = results.groups(0)[1]
-                macaddr = results.groups(0)[2]
-                
-                c.execute('SELECT * FROM addresses WHERE mac=?', (macaddr,))
-                result = c.fetchone()
-                if result == None:
-                    print "New mac address seen:", hostname, ipaddr, macaddr
-                    try:
-                        if len(sys.argv) == 2:
-                            subprocess.call([sys.argv[1], 'New mac address detected', " ".join( [ hostname, ipaddr, macaddr ] )])
-                    except:
-                        pass
+    # loop over lines in data
+    for line in arpdata.splitlines():
+        # if line valid arp line
+        results = arpregex.match(line)
+        if results != None:
+            # matches expected format
+            hostname = results.groups(0)[0]
+            ipaddr = results.groups(0)[1]
+            macaddr = results.groups(0)[2]
+            
+            c.execute('SELECT * FROM addresses WHERE mac=?', (macaddr,))
+            result = c.fetchone()
+            if result == None:
+                try:
+                    print 'New mac address detected', " ".join( [ hostname, ipaddr, macaddr ] )
+                    response = client.publish(
+                        TopicArn=SNS_ARN,
+                        Message=" - ".join( [ hostname, ipaddr, macaddr ] ),
+                        Subject=('New mac address detected - ' + hostname + ' - ' + ipaddr)[0:100],
+                    )
                     c.execute("INSERT INTO addresses VALUES (?,?,?,?,0)", ( hostname, ipaddr, macaddr, timestamp ))
                     dbconn.commit()
-                else:
-                    # update last time seen
-                    c.execute("update addresses set timestamp = ? where mac = ?", ( timestamp, macaddr ))
-                    dbconn.commit()
+                    print 'Logged'
+                except Exception as e:
+                    print e
+                    pass
+            else:
+                # update last time seen
+                c.execute("update addresses set timestamp = ? where mac = ?", ( timestamp, macaddr ))
+                dbconn.commit()
+    time.sleep(5)
 
 dbconn.close()
