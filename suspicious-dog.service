@@ -8,6 +8,7 @@ WorkingDirectory=/Suspicious-Dog/
 ExecStart=/Suspicious-Dog/suspiciousdog.py
 RestartSec=1min
 Restart=on-failure
+User=nagios
 
 [Install]
 WantedBy=multi-user.target
