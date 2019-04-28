@@ -1,12 +1,4 @@
-#! /bin/sh
-"true" '''\'
-if command -v python2 > /dev/null; then
-  exec python2 "$0" "$@"
-else
-  exec python "$0" "$@"
-fi
-exit $?
-'''
+#! /usr/bin/env python3
 
 import sqlite3
 import datetime

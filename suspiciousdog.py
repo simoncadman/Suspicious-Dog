@@ -1,12 +1,4 @@
-#! /bin/sh
-"true" '''\'
-if command -v python2 > /dev/null; then
-  exec python2 "$0" "$@"
-else
-  exec python "$0" "$@"
-fi
-exit $?
-'''
+#! /usr/bin/env python3
 
 import sys
 import re
@@ -40,7 +32,7 @@ while True:
     # loop over lines in data
     for line in arpdata.splitlines():
         # if line valid arp line
-        results = arpregex.match(line)
+        results = arpregex.match(line.decode('utf-8'))
         if results != None:
             # matches expected format
             hostname = results.groups(0)[0]
@@ -51,7 +43,7 @@ while True:
             result = c.fetchone()
             if result == None:
                 try:
-                    print 'New mac address detected', " ".join( [ hostname, ipaddr, macaddr ] )
+                    print('New mac address detected: %s' % ( " ".join( [ hostname, ipaddr, macaddr ] )), flush=True)
                     response = client.publish(
                         TopicArn=SNS_ARN,
                         Message=" - ".join( [ hostname, ipaddr, macaddr ] ),
@@ -59,14 +51,16 @@ while True:
                     )
                     c.execute("INSERT INTO addresses VALUES (?,?,?,?,0)", ( hostname, ipaddr, macaddr, timestamp ))
                     dbconn.commit()
-                    print 'Logged'
+                    print('Logged', flush=True)
                 except Exception as e:
-                    print e
+                    print(e, flush=True)
                     pass
             else:
                 # update last time seen
                 c.execute("update addresses set timestamp = ? where mac = ?", ( timestamp, macaddr ))
                 dbconn.commit()
+        else:
+            print("Unable to parse: %s" % ( line.decode('utf-8'), ), flush=True)
     time.sleep(5)
 
 dbconn.close()
