@@ -1,1 +1,1 @@
-*/6 00 * * * nagios cd /Suspicious-Dog/ && ./cron.py
+*/6 00 * * * nagios cd /opt/Suspicious-Dog/ && ./cron.py

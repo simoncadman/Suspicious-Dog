@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/Suspicious-Dog/
-ExecStart=/Suspicious-Dog/suspiciousdog.py
+WorkingDirectory=/opt/Suspicious-Dog/
+ExecStart=/opt/Suspicious-Dog/suspiciousdog.py
 RestartSec=1min
 Restart=on-failure
 User=nagios
