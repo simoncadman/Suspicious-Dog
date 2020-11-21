@@ -7,8 +7,9 @@ import json
 import sqlite3
 import subprocess
 import boto3
-SNS_ARN = "arn:aws:sns:us-east-1:294819063748:niftyalert"
-SNS_REGION = 'us-east-1'
+import os
+SNS_ARN = os.environ['SNS_ARN']
+SNS_REGION = os.environ['SNS_REGION']
 
 dbconn = sqlite3.connect('log.db')
 c = dbconn.cursor()
