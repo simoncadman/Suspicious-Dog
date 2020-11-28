@@ -1,0 +1,10 @@
+[Unit]
+Description=Clean suspicious dog db of old records
+
+[Timer]
+OnCalendar=Daily
+AccuracySec=1d
+Persistent=true
+
+[Install]
+WantedBy=timers.target
