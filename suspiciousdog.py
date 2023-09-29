@@ -39,6 +39,10 @@ while True:
             hostname = results.groups(0)[0]
             ipaddr = results.groups(0)[1]
             macaddr = results.groups(0)[2]
+
+            # ignore 10.88 ip range
+            if ipaddr.startswith('10.88.'):
+                continue
             
             c.execute('SELECT * FROM addresses WHERE mac=?', (macaddr,))
             result = c.fetchone()
